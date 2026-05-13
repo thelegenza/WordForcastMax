@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word Forecast Max Google 10k V22</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f5;
+  margin: 0;
+  padding: 24px;
+}
+.container {
+  max-width: 1000px;
+  margin: auto;
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+input {
+  width: 100%;
+  padding: 16px;
+  font-size: 28px;
+  border-radius: 14px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.letters, .matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+button {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.lightBtn {
+  background: #e5e7eb;
+  color: #111827;
+  padding: 12px 18px;
+  font-size: 22px;
+  font-weight: bold;
+}
+.darkBtn {
+  background: #4b5563;
+  color: white;
+  padding: 12px 18px;
+  font-size: 22px;
+  font-weight: bold;
+}
+.word {
+  background: #ececec;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+.complete {
+  margin-top: 24px;
+  background: #dff6df;
+  padding: 18px;
+  border-radius: 14px;
+  display: none;
+  font-size: 20px;
+}
+.status {
+  margin: 14px 0 20px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff4c2;
+}
+.error {
+  background: #ffe0e0;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Word Forecast Max Google 10k V22</h1>
+<p>Uses only the Google 10,000 English word list. No generated words and no suffix/prefix invention.</p>
+<div id="status" class="status">Loading Google 10k word list...</div>
+
+<input id="wordInput" placeholder="Start typing..." disabled />
+
+<h2>Forecasted Next Letters</h2>
+<div id="letters" class="letters"></div>
+
+<h2>Matching Words <span id="count"></span></h2>
+<div id="matches" class="matches"></div>
+
+<div id="complete" class="complete"></div>
+</div>
+
+<script>
+const GOOGLE_10K_URL = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
+
+let words = [];
+
+const input = document.getElementById("wordInput");
+const lettersDiv = document.getElementById("letters");
+const matchesDiv = document.getElementById("matches");
+const completeDiv = document.getElementById("complete");
+const countSpan = document.getElementById("count");
+const statusDiv = document.getElementById("status");
+
+async function loadWords() {
+  try {
+    const response = await fetch(GOOGLE_10K_URL, { cache: "force-cache" });
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    const text = await response.text();
+
+    words = [...new Set(
+      text
+        .split(/\s+/)
+        .map(word => word.toLowerCase().trim())
+        .filter(word => /^[a-z]+$/.test(word))
+    )];
+
+    input.disabled = false;
+    statusDiv.textContent = "Loaded " + words.length.toLocaleString() + " words from the Google 10k English list.";
+    statusDiv.className = "status";
+    updateUI();
+  } catch (error) {
+    statusDiv.textContent = "Could not load the Google 10k word list. Check internet access or GitHub raw-file access. Error: " + error.message;
+    statusDiv.className = "status error";
+  }
+}
+
+function updateUI() {
+  const prefix = input.value.toLowerCase().replace(/[^a-z]/g, "");
+  input.value = prefix;
+
+  const matches = prefix ? words.filter(word => word.startsWith(prefix)) : [];
+
+  const nextLetters = [...new Set(
+    matches
+      .filter(word => word.length > prefix.length)
+      .map(word => word[prefix.length])
+  )].sort();
+
+  lettersDiv.innerHTML = "";
+  matchesDiv.innerHTML = "";
+  countSpan.textContent = prefix ? "(" + matches.length + ")" : "";
+
+  nextLetters.forEach(letter => {
+    const btn = document.createElement("button");
+    btn.className = letter <= "k" ? "lightBtn" : "darkBtn";
+    btn.textContent = letter.toUpperCase();
+
+    btn.onclick = () => {
+      input.value += letter;
+      updateUI();
+    };
+
+    lettersDiv.appendChild(btn);
+  });
+
+  matches.slice(0, 300).forEach(word => {
+    const div = document.createElement("div");
+    div.className = "word";
+    div.textContent = word;
+    matchesDiv.appendChild(div);
+  });
+
+  if (matches.length > 300) {
+    const div = document.createElement("div");
+    div.className = "word";
+    div.textContent = "...showing first 300";
+    matchesDiv.appendChild(div);
+  }
+
+  if (matches.includes(prefix) && prefix.length > 0) {
+    completeDiv.style.display = "block";
+    completeDiv.innerHTML = "<strong>Completed Word:</strong> " + prefix;
+  } else {
+    completeDiv.style.display = "none";
+  }
+}
+
+input.addEventListener("input", updateUI);
+loadWords();
+</script>
+</body>
+</html>
