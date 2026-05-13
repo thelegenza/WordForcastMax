@@ -1,1 +1,0 @@
-Word Forecast Max v02\n\n1. Install Node.js\n2. Run: npm install\n3. Run: npm run dev\n
