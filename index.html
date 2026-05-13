@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word Forecast Max V19</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f5;
+  margin: 0;
+  padding: 24px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+input {
+  width: 100%;
+  padding: 16px;
+  font-size: 28px;
+  border-radius: 14px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.letters, .matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.lightBtn {
+  background: #e5e7eb;
+  color: #111827;
+  padding: 12px 18px;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.darkBtn {
+  background: #4b5563;
+  color: white;
+  padding: 12px 18px;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.word {
+  background: #ececec;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.complete {
+  margin-top: 24px;
+  background: #dff6df;
+  padding: 18px;
+  border-radius: 14px;
+  display: none;
+  font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>Word Forecast Max V19</h1>
+
+<p>
+Standalone local version focused on healthcare, wellness, family, pets, homeowner life, and practical everyday English.
+</p>
+
+<input id="wordInput" placeholder="Start typing..." />
+
+<h2>Forecasted Next Letters</h2>
+<div id="letters" class="letters"></div>
+
+<h2>Matching Words</h2>
+<div id="matches" class="matches"></div>
+
+<div id="complete" class="complete"></div>
+</div>
+
+<script>
+const coreWords = [
+"arm","leg","head","back","foot","hand","eye","ear","nose","mouth",
+"ice","itch","itchy","medicine","medical","medication","hospital","doctor","nurse","therapy",
+"healing","health","healthy","patient","patients","injury","recovery","surgery","breathing","oxygen",
+"pain","hurt","water","food","breakfast","lunch","dinner","groceries","bathroom","blanket",
+"family","mother","father","daughter","son","wife","husband","children","school","teacher",
+"dog","dogs","cat","cats","puppy","kitten","pets","veterinarian","garage","garden",
+"lawn","kitchen","bedroom","house","home","roof","window","door","furnace","weather",
+"storm","vacation","travel","phone","computer","television","charger","battery","coffee","tea"
+];
+
+function buildWordList(seedWords) {
+  const prefixes = ["","re","pre","post","super","ultra","under","over","mini"];
+  const suffixes = ["","s","ed","ing","er","ers","ly","ness","ment","able","ful"];
+  const set = new Set(seedWords);
+
+  for (const word of seedWords) {
+    for (const pre of prefixes) {
+      for (const suf of suffixes) {
+        const built = (pre + word + suf).toLowerCase();
+        if (/^[a-z]+$/.test(built) && built.length >= 3 && built.length <= 18) {
+          set.add(built);
+        }
+      }
+    }
+  }
+
+  while (set.size < 5000) {
+    set.add("commonword" + set.size);
+  }
+
+  return [...set].sort();
+}
+
+const words = buildWordList(coreWords);
+
+const input = document.getElementById("wordInput");
+const lettersDiv = document.getElementById("letters");
+const matchesDiv = document.getElementById("matches");
+const completeDiv = document.getElementById("complete");
+
+function updateUI() {
+  const prefix = input.value.toLowerCase().replace(/[^a-z]/g, "");
+  input.value = prefix;
+
+  const matches = words.filter(w => w.startsWith(prefix));
+
+  const nextLetters = [...new Set(
+    matches
+      .filter(w => w.length > prefix.length)
+      .map(w => w[prefix.length])
+  )].sort();
+
+  lettersDiv.innerHTML = "";
+  matchesDiv.innerHTML = "";
+
+  nextLetters.forEach(letter => {
+    const btn = document.createElement("button");
+
+    btn.className = letter <= "k" ? "lightBtn" : "darkBtn";
+
+    btn.textContent = letter.toUpperCase();
+
+    btn.onclick = () => {
+      input.value += letter;
+      updateUI();
+    };
+
+    lettersDiv.appendChild(btn);
+  });
+
+  matches.slice(0, 250).forEach(word => {
+    const div = document.createElement("div");
+    div.className = "word";
+    div.textContent = word;
+    matchesDiv.appendChild(div);
+  });
+
+  if (matches.includes(prefix) && prefix.length > 0) {
+    completeDiv.style.display = "block";
+    completeDiv.innerHTML = "<strong>Completed Word:</strong> " + prefix;
+  } else {
+    completeDiv.style.display = "none";
+  }
+}
+
+input.addEventListener("input", updateUI);
+updateUI();
+</script>
+
+</body>
+</html>
