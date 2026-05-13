@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word Forecast Max V14</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f5;
+  margin: 0;
+  padding: 24px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+input {
+  width: 100%;
+  padding: 16px;
+  font-size: 28px;
+  border-radius: 14px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.letters, .matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.lightBtn {
+  background: #e5e7eb;
+  color: #111827;
+  padding: 12px 18px;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.darkBtn {
+  background: #4b5563;
+  color: white;
+  padding: 12px 18px;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.word {
+  background: #ececec;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.complete {
+  margin-top: 24px;
+  background: #dff6df;
+  padding: 18px;
+  border-radius: 14px;
+  display: none;
+  font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Word Forecast Max V14</h1>
+
+  <p>
+    Uses a curated modern/common English word list with local forecasting.
+  </p>
+
+  <input id="wordInput" placeholder="Start typing..." />
+
+  <h2>Forecasted Next Letters</h2>
+  <div id="letters" class="letters"></div>
+
+  <h2>Matching Words</h2>
+  <div id="matches" class="matches"></div>
+
+  <div id="complete" class="complete"></div>
+</div>
+
+<script>
+const words = [
+"about","above","accept","account","across","action","active","actual",
+"address","adult","after","again","against","agent","agree","air","allow",
+"almost","alone","along","already","also","always","among","amount","animal",
+"another","answer","any","appear","apple","application","apply","around",
+"arrive","attack","attention","author","available","avoid","away","baby",
+"back","bad","ball","banana","band","bandit","bank","base","basic","beautiful",
+"because","become","before","begin","behavior","behind","believe","benefit",
+"better","between","black","blood","board","body","book","both","break",
+"bring","brother","budget","build","builder","building","business","camera",
+"candidate","capital","career","carry","case","catch","cater","cattle",
+"center","central","century","certain","chance","change","character","charge",
+"check","child","choice","choose","church","civil","claim","class","clear",
+"close","coach","college","color","commercial","common","community","company",
+"compare","computer","concern","condition","conference","consider","consumer",
+"contain","continue","control","country","couple","course","court","cover",
+"create","culture","current","daughter","debate","decide","decision","deep",
+"degree","describe","design","despite","detail","determine","develop",
+"development","difference","different","difficult","direction","director",
+"discover","discussion","doctor","dodge","door","dream","drive","during",
+"early","easy","education","effect","effort","either","election","employee",
+"energy","enjoy","enough","enter","entire","environment","especially",
+"establish","evening","event","evidence","exactly","example","executive",
+"exist","expect","experience","expert","explain","factor","family","famous",
+"father","federal","feeling","field","figure","final","financial","finish",
+"focus","follow","foreign","forecast","forest","forget","former","forward",
+"friend","front","future","garden","general","generation","government",
+"great","ground","group","growth","guess","happen","health","heart","heavy",
+"hello","helmet","hero","history","holiday","hospital","however","human",
+"important","improve","include","increase","indeed","individual","industry",
+"information","inside","instead","interest","international","interview",
+"investment","involve","issue","kitchen","knowledge","language","large",
+"later","leader","learn","level","light","listen","little","local","machine",
+"magazine","maintain","major","majority","manage","management","manager",
+"market","marriage","material","measure","medical","meeting","member",
+"memory","message","method","middle","military","million","mission","modern",
+"moment","money","morning","mother","mountain","movement","multiple","music",
+"natural","necessary","network","newspaper","nothing","notice","number",
+"occur","office","officer","official","operation","opportunity","option",
+"orange","orbit","order","organization","outside","owner","painting",
+"parent","partner","pattern","people","perform","performance","perhaps",
+"period","personal","physical","picture","place","planet","player","popular",
+"population","position","possible","power","practice","prepare","present",
+"president","pressure","prevent","price","private","probably","problem",
+"process","produce","product","production","professional","program","project",
+"property","protect","provide","public","purpose","python","quality",
+"question","quickly","radio","rather","reach","ready","realize","really",
+"reason","receive","recent","recognize","record","reduce","reflect","region",
+"relationship","remember","remove","report","represent","require","research",
+"resource","respond","response","responsibility","result","return","reveal",
+"rocket","science","scientist","score","season","second","section","security",
+"senior","series","serious","service","several","should","significant",
+"similar","simple","simply","single","situation","skill","small","social",
+"society","software","soldier","someone","something","sometimes","source",
+"space","special","specific","speech","spend","sport","sports","spring",
+"stadium","standard","start","statement","station","strategy","street",
+"strong","structure","student","study","subject","successful","suddenly",
+"suffer","suggest","summer","support","surface","system","teacher","technology",
+"television","together","tonight","toward","training","travel","trouble",
+"understand","uncomfortable","usually","various","victim","visit","voice",
+"watch","water","western","whether","window","within","without","wonder",
+"word","worker","workflow","world","writer"
+];
+
+const input = document.getElementById("wordInput");
+const lettersDiv = document.getElementById("letters");
+const matchesDiv = document.getElementById("matches");
+const completeDiv = document.getElementById("complete");
+
+function updateUI() {
+  const prefix = input.value.toLowerCase().replace(/[^a-z]/g, "");
+  input.value = prefix;
+
+  const matches = words.filter(w => w.startsWith(prefix));
+
+  const nextLetters = [...new Set(
+    matches
+      .filter(w => w.length > prefix.length)
+      .map(w => w[prefix.length])
+  )].sort();
+
+  lettersDiv.innerHTML = "";
+  matchesDiv.innerHTML = "";
+
+  nextLetters.forEach(letter => {
+    const btn = document.createElement("button");
+
+    if (letter <= "k") {
+      btn.className = "lightBtn";
+    } else {
+      btn.className = "darkBtn";
+    }
+
+    btn.textContent = letter.toUpperCase();
+
+    btn.onclick = () => {
+      input.value += letter;
+      updateUI();
+    };
+
+    lettersDiv.appendChild(btn);
+  });
+
+  matches.slice(0, 200).forEach(word => {
+    const div = document.createElement("div");
+    div.className = "word";
+    div.textContent = word;
+    matchesDiv.appendChild(div);
+  });
+
+  if (matches.includes(prefix) && prefix.length > 0) {
+    completeDiv.style.display = "block";
+    completeDiv.innerHTML =
+      "<strong>Completed Word:</strong> " + prefix;
+  } else {
+    completeDiv.style.display = "none";
+  }
+}
+
+input.addEventListener("input", updateUI);
+updateUI();
+</script>
+
+</body>
+</html>
